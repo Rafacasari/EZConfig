@@ -7,4 +7,13 @@
     <Version>0.1.0</Version>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="com.github.PEAKModding.PEAKLib.Core">
+      <HintPath>..\..\..\..\PEAKLib\artifacts\bin\PEAKLib.UI\debug\com.github.PEAKModding.PEAKLib.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="com.github.PEAKModding.PEAKLib.UI">
+      <HintPath>..\..\..\..\PEAKLib\artifacts\bin\PEAKLib.UI\debug\com.github.PEAKModding.PEAKLib.UI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

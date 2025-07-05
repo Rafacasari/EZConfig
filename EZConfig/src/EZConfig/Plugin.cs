@@ -4,18 +4,20 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using EZConfig.Components;
 using EZConfig.UI;
+using PEAKLib.UI;
+using PEAKLib.UI.Elements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using Object = UnityEngine.Object;
 
 namespace EZConfig;
 
 [BepInAutoPlugin]
+[BepInDependency(UIPlugin.Id)]
 public partial class Plugin : BaseUnityPlugin
 {
     public static Plugin instance = null!;
@@ -27,15 +29,14 @@ public partial class Plugin : BaseUnityPlugin
         Log = Logger;
         Log.LogInfo($"Plugin {Name} is loaded!");
 
-        Patching.Initialize();
+        PeakTemplates.Initialize();
 
-        Spam("Load complete!");
+        INFO("Load complete!");
     }
 
     private void Start()
     {
-        // Create entries for all loaded mods
-        AddModSettings();
+        LoadModSettings();
 
         void builderDelegate(Transform parent)
         {
@@ -60,7 +61,7 @@ public partial class Plugin : BaseUnityPlugin
                 .SetAnchorMin(new Vector2(0, 1))
                 .SetAnchorMax(new Vector2(0, 1))
                 .SetPosition(new Vector2(428, -70))
-                .SetSize(new Vector2(1360, 980)).RectTransform;
+                .SetSize(new Vector2(1360, 980));
 
             var settingsMenu = content.gameObject.AddComponent<ModdedSettingsMenu>();
 
@@ -77,8 +78,14 @@ public partial class Plugin : BaseUnityPlugin
             settingsMenu.Tabs = moddedSettingsTABS;
 
             foreach (var (modName, configEntryBases) in GetModConfigEntries())
-                horizontalTabs.AddTab(modName);
-
+            {
+                var tabButton = horizontalTabs.AddTab(modName);
+                var moddedButton = tabButton.AddComponent<ModdedTABSButton>();
+                moddedButton.category = modName;
+                moddedButton.text = tabButton.GetComponentInChildren<TextMeshProUGUI>();
+                moddedButton.SelectedGraphic = tabButton.transform.Find("Selected").gameObject;
+            }
+           
             var isTitleScreen = SceneManager.GetActiveScene().name == "Title";
             
             var pauseOptionsMenu = FindAnyObjectByType<PauseOptionsMenu>();
@@ -94,18 +101,17 @@ public partial class Plugin : BaseUnityPlugin
 
             if (modSettingsButton != null && isTitleScreen)
                 modSettingsButton.SetPosition(new Vector2(-140, -210)).SetWidth(200);
-            
+            else if (modSettingsButton != null && !isTitleScreen)
+                modSettingsButton.transform.SetSiblingIndex(4);
         }
 
-        MenuAPI.AddElementToPauseMenu(builderDelegate);
-        MenuAPI.AddElementToMainMenu(builderDelegate);
+        MenuAPI.AddToPauseMenu(builderDelegate);
+        MenuAPI.AddToMainMenu(builderDelegate);
     }
 
-    internal static void Spam(string message)
+    internal static void INFO(string message)
     {
-        //if (ModConfig.DeveloperLogging.Value)
         Log.LogDebug(message);
-        //else
     }
 
     internal static void ERROR(string message)
@@ -118,12 +124,12 @@ public partial class Plugin : BaseUnityPlugin
         Log.LogWarning(message);
     }
 
-    private static bool modSettingsAdded = false;
-    private static void AddModSettings()
+    private static bool modSettingsLoaded = false;
+    private static void LoadModSettings()
     {
-        if (modSettingsAdded) return;
+        if (modSettingsLoaded) return;
 
-        modSettingsAdded = true;
+        modSettingsLoaded = true;
 
         foreach (var (modName, configEntryBases) in GetModConfigEntries())
         {
@@ -136,7 +142,7 @@ public partial class Plugin : BaseUnityPlugin
                         var defaultValue = configEntry.DefaultValue is bool dValue && dValue;
                         var currentValue = configEntry.BoxedValue is bool bValue && bValue;
 
-                        MenuAPI.AddBoolToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
+                        SettingsAPI.AddBoolToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
                     }
                     else if (configEntry.SettingType == typeof(float))
                     {
@@ -152,27 +158,27 @@ public partial class Plugin : BaseUnityPlugin
                             maxValue = range.MaxValue;
                         }
 
-                        MenuAPI.AddFloatToTab(configEntry.Definition.Key, defaultValue, modName, minValue, maxValue, currentValue, newVal => configEntry.BoxedValue = newVal);
+                        SettingsAPI.AddFloatToTab(configEntry.Definition.Key, defaultValue, modName, minValue, maxValue, currentValue, newVal => configEntry.BoxedValue = newVal);
                     }
 
                     else if (configEntry.SettingType == typeof(int))
                     {
                         var defaultValue = configEntry.DefaultValue is int cValue ? cValue : 0;
                         var currentValue = configEntry.BoxedValue is int bValue ? bValue : 0;
-                        MenuAPI.AddIntToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
+                        SettingsAPI.AddIntToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
                     }
                     else if (configEntry.SettingType == typeof(string))
                     {
                         var defaultValue = configEntry.DefaultValue is string cValue ? cValue : "";
                         var currentValue = configEntry.BoxedValue is string bValue ? bValue : "";
-                        MenuAPI.AddStringToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
+                        SettingsAPI.AddStringToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
                     }
                     else if (configEntry.SettingType == typeof(KeyCode))
                     {
                         var defaultValue = configEntry.DefaultValue is KeyCode cValue ? cValue : KeyCode.None;
                         var currentValue = configEntry.BoxedValue is KeyCode bValue ? bValue : KeyCode.None;
 
-                        MenuAPI.AddKeybindToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
+                        SettingsAPI.AddKeybindToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
                     }
                     else // Warn about missing SettingTypes
                         WARNING($"{modName} - {configEntry.Definition.Key} - {configEntry.SettingType}");

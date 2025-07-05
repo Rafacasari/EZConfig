@@ -5,9 +5,5 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("CodeQuality", "IDE0051", Justification = "Used by Unity", Scope = "member", Target = "~M:EZConfig.UI.CustomPage.Awake")]
-[assembly: SuppressMessage("CodeQuality", "IDE0051", Justification = "Used by Unity", Scope = "member", Target = "~M:EZConfig.UI.PeakMenuButton.Awake")]
-[assembly: SuppressMessage("CodeQuality", "IDE0051", Justification = "Used by Unity", Scope = "member", Target = "~M:EZConfig.UI.PeakText.Awake")]
-[assembly: SuppressMessage("CodeQuality", "IDE0051", Justification = "Used by Unity", Scope = "member", Target = "~M:EZConfig.UI.PeakHorizontalTabs.Awake")]
-[assembly: SuppressMessage("CodeQuality", "IDE0051", Justification = "Used by Unity", Scope = "member", Target = "~M:EZConfig.UI.PeakTabContent.Awake")]
-[assembly: SuppressMessage("CodeQuality", "IDE0051", Justification = "Used by Unity", Scope = "member", Target = "~M:EZConfig.UI.PeakElement.Awake")]
+[assembly: SuppressMessage("CodeQuality", "IDE0051", Justification = "Used by Unity", Scope = "member", Target = "~M:EZConfig.Components.ModdedSettingsMenu.OnEnable")]
+[assembly: SuppressMessage("CodeQuality", "IDE0051", Justification = "Used by Unity", Scope = "member", Target = "~M:EZConfig.Components.ModdedTABSButton.Update")]
